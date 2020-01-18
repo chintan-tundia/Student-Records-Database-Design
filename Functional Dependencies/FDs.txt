@@ -1,0 +1,73 @@
+student:
+PK: studid -> {FName, MName, LName, Batch, Gender, CPI, ProgramID}
+
+
+Course:
+PK: CourseNo -> {CourseName, Credits} [Assumption: course name not unique]
+
+Semester:
+PK: AcadYear,Season
+
+
+Offers:
+PK: {CourseNo, AcademicYear, Season} -> InstructorID
+
+
+Registers:
+PK: {StudentID, CourseNo, AcademicYear, Season} -> Grade
+
+
+Result:
+PK: {StudentID, AcademicYear, Season} -> SPI
+
+
+Instructor:
+PK: Instructorid -> Name
+
+
+Program:
+PK: ProgramID ->ProgramName
+
+
+
+
+
+
+
+
+
+
+
+Qualifications
+PK: ApplicantID -> {QualifyingExamName,  Affiliation, PassingYear, ObtainedGrade}
+
+Applicant
+PK: ApplicantID -> Resume
+
+Job
+PK: {JobOfferID, CompanyID} -> {JobProfile, ToDate, FromDate, Vacancies, Package, JobType, Location}
+
+Company
+PK: CompanyID -> {Name,Type,Website,Contact_no}
+
+Application
+PK: {ApplicantID,JobOfferID} -> Approved
+
+QualificationRequirement
+PK: JobOfferID -> {Qualification,Grade}
+
+PlacementCell
+PK: Da_ID -> {MemberName,Designation,Nation}
+
+Round
+PK: {JobOfferID,RoundName} -> {Type,Order,Description,Venue,DateTime}
+
+Co-ordinates
+PK: Da_ID,JobOfferID,RoundName
+
+Participates
+PK: {AppicantID,JobOfferID,RoundName} -> Status
+
+
+
+All in BCNF

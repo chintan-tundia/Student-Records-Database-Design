@@ -1,0 +1,173 @@
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
+
+EXEC SQL BEGIN DECLARE SECTION;
+	char query[200],name[30],type[30],tabname[30],title[30][30],dttype[15][30],record[150],*strsplit;
+	char data[15][30];
+EXEC SQL END DECLARE SECTION;
+
+void print_sqlca()
+{
+    fprintf(stderr,"\n \e[0;31m");
+    fprintf(stderr, "==== sqlca ====\n");
+    fprintf(stderr, "sqlcode: %ld\n", sqlca.sqlcode);
+    fprintf(stderr, "sqlerrm.sqlerrml: %d\n", sqlca.sqlerrm.sqlerrml);
+    fprintf(stderr, "sqlerrm.sqlerrmc: %s\n", sqlca.sqlerrm.sqlerrmc);
+    fprintf(stderr, "sqlerrd: %ld %ld %ld %ld %ld %ld\n", sqlca.sqlerrd[0],sqlca.sqlerrd[1],sqlca.sqlerrd[2],
+                                                          sqlca.sqlerrd[3],sqlca.sqlerrd[4],sqlca.sqlerrd[5]);
+    fprintf(stderr, "sqlwarn: %d %d %d %d %d %d %d %d\n", sqlca.sqlwarn[0], sqlca.sqlwarn[1], sqlca.sqlwarn[2],
+                                                          sqlca.sqlwarn[3], sqlca.sqlwarn[4], sqlca.sqlwarn[5],
+                                                          sqlca.sqlwarn[6], sqlca.sqlwarn[7]);
+    fprintf(stderr, "sqlstate: %5s\n", sqlca.sqlstate);
+    fprintf(stderr, "===============\n");
+}
+
+void ExecuteUpdate(char *q1) { 	
+	strcpy(query,q1);
+	EXEC SQL PREPARE query_prep FROM :query;
+
+	EXEC SQL EXECUTE query_prep;
+	if(sqlca.sqlcode!=0)
+	{
+		print_sqlca();
+		return;
+	}	
+	printf("\n\n\e[1;32mSucessful.");
+	EXEC SQL COMMIT;
+
+}
+int main()
+{
+
+	int i,count;
+	char choice,garb,query1[300],query2[300],temp[100];
+
+
+	
+
+	EXEC SQL CONNECT TO PlacementManagement@localhost USER postgres USING chintu123;
+	EXEC SQL set search_path to placementmanagement;	
+
+	printf("\e[0;34m");
+	for(i=0;i<120;i++)
+	printf("•");	
+	printf("\n•••••••••••••••••••••••••••••••••••••••••••\e[1;33mPlacement Management System");
+	printf("\e[0;34m");
+	printf("••••••••••••••••••••••••••••••••••••••••••••••••\n");
+	printf("\e[0;34m");
+	for(i=0;i<120;i++)
+	printf("•");
+
+	if(sqlca.sqlcode!=0)
+	{
+		print_sqlca();
+		return 1;
+	}
+
+	
+	printf("\n\n\n");
+	
+	strcpy(query,"SELECT table_name FROM information_schema.tables WHERE table_schema='placementmanagement'  AND table_type='BASE TABLE';");
+	printf("\e[1;32m\t\t----TABLES----");	
+	printf("\e[1;37m");
+	EXEC SQL PREPARE query_prep FROM :query;
+	EXEC SQL DECLARE tab_cursor CURSOR FOR query_prep;
+	EXEC SQL OPEN tab_cursor;
+	i=0;
+	EXEC SQL FETCH tab_cursor INTO :name;
+	while(sqlca.sqlcode==0)
+	{
+		name[0]=name[0]-32;
+		if(i%2==0)printf("\n");
+		printf(" %-24s\t",name);
+		i++;
+		EXEC SQL FETCH tab_cursor INTO :name;
+	}
+	EXEC SQL CLOSE tab_cursor;
+	printf("\n\n\n");
+	printf("\e[1;32mEnter the name of table in which you want to insert data:\e[1;37m");
+	scanf("%s",tabname);
+
+	strcpy(query,"SELECT column_name,data_type FROM information_schema.columns WHERE table_name = '");
+	tabname[0]=tolower(tabname[0]);
+	strcat(query,tabname);
+	strcat(query,"' ORDER BY ordinal_position");
+	EXEC SQL PREPARE query_prep FROM :query;	
+	EXEC SQL OPEN tab_cursor;
+	EXEC SQL FETCH tab_cursor INTO :name,:type;
+	count=0;
+	while(sqlca.sqlcode==0)
+	{
+		//printf("\n %-11s %-11s",name,type);
+		strcpy(title[count],name);		
+		strcpy(dttype[count++],type);
+		EXEC SQL FETCH tab_cursor INTO :name,:type;
+	}
+	EXEC SQL CLOSE tab_cursor;	
+	strcpy(query,"SELECT ");
+	for(i=0;i<count;i++)
+	{
+		//printf("\e[1;36m%11.11s|",title[i]);
+		strcat(query,title[i]);
+	
+		if(i != count-1)
+			strcat(query,"||'#'||");		
+	}
+	
+	strcat(query," FROM ");
+	strcat(query,tabname);
+	printf("\n");
+	strcpy(query1,"");	
+	strcpy(query1,"INSERT INTO ");
+	strcat(query1,tabname); 
+	strcat(query1," (");
+	
+	strcpy(query2," VALUES(");
+	gets(temp);
+	for(i=0;i<count;i++)
+	{
+		printf("\nEnter %s(%s):",title[i],dttype[i]);
+		gets(temp);
+		
+		strcat(query1,title[i]);
+		
+		
+		
+		if(!strcmp(dttype[i],"numeric") || !strcmp(dttype[i],"integer") 
+			|| !strcmp(dttype[i],"double precision") || !strcmp(dttype[i],"bigint") || !strcmp(dttype[i],"real") || !strcmp(dttype[i],"boolean") ) {
+			strcat(query2,temp);
+			
+		}
+		else {
+			strcat(query2,"'");
+			strcat(query2,temp);
+			strcat(query2,"'");
+		}
+
+		if(i != count-1) {
+			strcat(query1,",");
+			strcat(query2,",");
+		}
+
+	
+	}
+
+	strcat(query1,")");
+	printf("\n\nQ1 : %s",query1);
+	strcat(query2,")");
+	
+	strcat(query1,query2);
+	printf("\n\n%s",query1);
+	strcpy(query,query1);
+	ExecuteUpdate(query);
+	
+	
+	
+	getchar();
+	printf("\n\n\e[1;37mPress enter to return.");
+	getchar();
+	EXEC SQL DISCONNECT;
+	return 0;
+
+}

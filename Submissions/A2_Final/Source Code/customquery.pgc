@@ -1,0 +1,125 @@
+#include <stdio.h>
+
+EXEC SQL BEGIN DECLARE SECTION;
+int i,c,cnt,len;
+char query[1024],name[30];
+EXEC SQL END DECLARE SECTION;
+
+void print_sqlca()
+{
+    fprintf(stderr,"\n \e[0;31m");
+    fprintf(stderr, "==== sqlca ====\n");
+    fprintf(stderr, "sqlcode: %ld\n", sqlca.sqlcode);
+    fprintf(stderr, "sqlerrm.sqlerrml: %d\n", sqlca.sqlerrm.sqlerrml);
+    fprintf(stderr, "sqlerrm.sqlerrmc: %s\n", sqlca.sqlerrm.sqlerrmc);
+    fprintf(stderr, "sqlerrd: %ld %ld %ld %ld %ld %ld\n", sqlca.sqlerrd[0],sqlca.sqlerrd[1],sqlca.sqlerrd[2],
+                                                          sqlca.sqlerrd[3],sqlca.sqlerrd[4],sqlca.sqlerrd[5]);
+    fprintf(stderr, "sqlwarn: %d %d %d %d %d %d %d %d\n", sqlca.sqlwarn[0], sqlca.sqlwarn[1], sqlca.sqlwarn[2],
+                                                          sqlca.sqlwarn[3], sqlca.sqlwarn[4], sqlca.sqlwarn[5],
+                                                          sqlca.sqlwarn[6], sqlca.sqlwarn[7]);
+    fprintf(stderr, "sqlstate: %5s\n", sqlca.sqlstate);
+    fprintf(stderr, "===============\n");
+}
+
+void ExecuteQuery(char *q1)
+{
+	strcpy(query,q1);		
+	EXEC SQL PREPARE query_prep FROM :query;
+	if(sqlca.sqlcode!=0)
+	{
+		print_sqlca();
+		return;
+	}
+	EXEC SQL DECLARE tab_cursor CURSOR FOR query_prep;
+	EXEC SQL ALLOCATE DESCRIPTOR mydesc;	
+	EXEC SQL OPEN tab_cursor;
+	
+	EXEC SQL FETCH NEXT FROM tab_cursor INTO SQL DESCRIPTOR mydesc;
+	EXEC SQL GET DESCRIPTOR mydesc :cnt=COUNT;
+	for(i=1;i<=cnt;i++)
+	{
+		EXEC SQL GET DESCRIPTOR mydesc VALUE :i :name=NAME;
+		//EXEC SQL GET DESCRIPTOR mydesc VALUE :i :size=OCTET_SIZE;
+		printf("\e[1;36m%-12.12s|",name);
+	}
+	printf("\n");
+	for(i=0;i<=cnt;i++)
+	{
+		printf("___________");
+	}
+	printf("___________");
+	while(sqlca.sqlcode==0)	
+	{
+		printf("\n");
+		for(i=1;i<=cnt;i++)
+		{
+			EXEC SQL GET DESCRIPTOR mydesc VALUE :i :name=DATA;
+			printf("\e[1;35m%-12.12s|",name);
+		}
+		EXEC SQL FETCH NEXT FROM tab_cursor INTO SQL DESCRIPTOR mydesc;
+	}
+
+}
+void ExecuteUpdate(char *q1) { 	
+	strcpy(query,q1);
+	EXEC SQL PREPARE query_prep FROM :query;
+
+	EXEC SQL EXECUTE query_prep;
+	if(sqlca.sqlcode!=0)
+	{
+		print_sqlca();
+		return;
+	}	
+	printf("\n\n\e[1;32mSucessful.");
+	EXEC SQL COMMIT;
+}
+
+
+int main()
+{
+
+	int queryno;
+	char choice,mkquery[1024];
+	EXEC SQL CONNECT TO PlacementManagement@localhost USER postgres USING chintu123;
+	EXEC SQL set search_path to placementmanagement;	
+	printf("\e[0;34m");
+	for(i=0;i<120;i++)
+	printf("•");	
+	printf("\n•••••••••••••••••••••••••••••••••••••••••••\e[1;33mPlacement Management System");
+	printf("\e[0;34m");
+	printf("••••••••••••••••••••••••••••••••••••••••••••••••\n");
+	printf("\e[0;34m");
+	for(i=0;i<120;i++)
+	printf("•");
+
+	if(sqlca.sqlcode!=0)
+	{
+		print_sqlca();
+		return 1;
+	}
+	printf("\n");
+	printf("\e[1;32m");	
+	printf(" --Build your query here--\n");	
+	for(i=0;i<120;i++)
+	printf("-");
+	printf("\e[1;37m");
+	printf("\n");	
+	printf("\e[1;37m");
+	gets(mkquery);
+	for(i=0;i<120;i++)
+	printf("\e[1;32m-");
+	if(tolower(mkquery[0])=='s')
+	{
+		ExecuteQuery(mkquery);	
+	}
+	else
+	{
+		ExecuteUpdate(mkquery);	
+	}
+	getchar();
+	printf("\n\n\e[1;37mPress enter to return.");
+	getchar();
+	EXEC SQL DISCONNECT;
+	return 0;
+}
+

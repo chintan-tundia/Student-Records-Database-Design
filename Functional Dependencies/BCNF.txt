@@ -1,0 +1,79 @@
+Company:
+CompanyID -> CompanyName, CompanyType,Website, ContactNo
+
+Job:
+JobOfferID -> CompanyID, ToDate, FromDate, Vacancies, Package, JobType, Location, Job_Profile
+
+
+Qualification_Requirement:
+JobOfferID,Qualification -> Grade
+
+
+PlacementCell:
+DA_ID -> ContactNo, Designation, MemName
+
+
+Applicant:
+ApplicantID -> Year, Resume
+
+
+Qualification:
+ApplicanID, QualifyingExam -> Affiliation, Passing year, Grade
+
+
+Rounds:
+JobOfferID,RoundName -> Description, Order, Type, venue, roundDate, RoundTime
+
+
+Coordinates:
+JobOfferID, RoundName, DA-ID [Full primary key]
+
+
+Application:
+ApplicantID,JobOfferID -> Approved
+
+
+Participates:
+ApplicantID,JobOfferID,RoundName -> Status
+
+
+Hires:
+JobOfferID,ApplicantID -> HireDate, Negotiated_Packege
+
+
+
+
+
+
+
+
+
+Student:
+StudentID -> Name, Gender, CPI, Batch, ProgramID
+
+
+Instructor:
+InstuctorID -> InstuctorName
+
+
+Program:
+ProgramID -> ProgramName
+
+
+Course:
+CourseNo -> Credit, CourseName
+
+
+Registers:
+StudentID,Season,AcadYear,CourseNo -> Grade
+
+
+Offers:
+Season,AcadYear,CourseNo -> InstructorID
+
+
+Result:
+StudentID,Season,AcadYear -> SPI
+
+
+

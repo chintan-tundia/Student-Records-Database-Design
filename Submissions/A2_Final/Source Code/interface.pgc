@@ -1,0 +1,89 @@
+#include <stdio.h>
+
+
+
+
+EXEC SQL BEGIN DECLARE SECTION;
+int c;
+EXEC SQL END DECLARE SECTION;
+void print_sqlca()
+{
+    fprintf(stderr,"\n \e[0;31m");
+    fprintf(stderr, "==== sqlca ====\n");
+    fprintf(stderr, "sqlcode: %ld\n", sqlca.sqlcode);
+    fprintf(stderr, "sqlerrm.sqlerrml: %d\n", sqlca.sqlerrm.sqlerrml);
+    fprintf(stderr, "sqlerrm.sqlerrmc: %s\n", sqlca.sqlerrm.sqlerrmc);
+    fprintf(stderr, "sqlerrd: %ld %ld %ld %ld %ld %ld\n", sqlca.sqlerrd[0],sqlca.sqlerrd[1],sqlca.sqlerrd[2],
+                                                          sqlca.sqlerrd[3],sqlca.sqlerrd[4],sqlca.sqlerrd[5]);
+    fprintf(stderr, "sqlwarn: %d %d %d %d %d %d %d %d\n", sqlca.sqlwarn[0], sqlca.sqlwarn[1], sqlca.sqlwarn[2],
+                                                          sqlca.sqlwarn[3], sqlca.sqlwarn[4], sqlca.sqlwarn[5],
+                                                          sqlca.sqlwarn[6], sqlca.sqlwarn[7]);
+    fprintf(stderr, "sqlstate: %5s\n", sqlca.sqlstate);
+    fprintf(stderr, "===============\n");
+}
+int main()
+{
+
+	int i;
+	char choice,garb;
+
+	EXEC SQL CONNECT TO PlacementManagement@localhost USER postgres USING chintu123;
+	EXEC SQL set search_path to placementmanagement;	
+
+	printf("\e[0;34m");
+	for(i=0;i<120;i++)
+	printf("•");	
+	printf("\n•••••••••••••••••••••••••••••••••••••••••••\e[1;33mPlacement Management System");
+	printf("\e[0;34m");
+	printf("••••••••••••••••••••••••••••••••••••••••••••••••\n");
+	printf("\e[0;34m");
+	for(i=0;i<120;i++)
+	printf("•");
+
+	if(sqlca.sqlcode!=0)
+	{
+		print_sqlca();
+		return 1;
+	}
+
+	
+	printf("\n\n\n");
+	printf("\e[1;32m");	
+	printf(" --CHOICES--");	
+	printf("\e[1;37m");
+	printf("\n 1.Enter Data");
+	printf("\n 2.View Tables");
+	printf("\n 3.Run Sample Queries");
+	printf("\n 4.SQL Query Editor");
+	printf("\n 5.Exit");
+	printf("\n\n\n");
+	while(1)
+	{
+		printf("\e[1;32m");
+		printf("\nEnter your choice :");
+		printf("\e[1;37m");
+		scanf("%c%c",&choice,&garb);
+		
+		switch(choice)
+		{
+			case '1':			
+				system("./insertdata.bat");
+			break;
+			case '2':
+				system("./viewtab.bat");
+			break;
+			case '3':
+				system("./samplequeries.bat");
+			break;
+			case '4':
+				system("./customquery.bat");
+			break;
+			case '5':
+				EXEC SQL DISCONNECT;
+			return 0;
+		}
+	}	
+
+	return 0; 
+}
+
